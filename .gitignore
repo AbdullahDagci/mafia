@@ -1,0 +1,27 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.swp
+TestResults/
+coverage/
+
+# Yerel ayar ve sırlar
+appsettings.*.local.json
+*.local.env
+.env
+
+# Data Protection anahtarları (yerel geliştirme)
+backend/src/SusPayi.Api/keys/
+
+# Flutter (ileride)
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+
+# OS
+.DS_Store
+Thumbs.db
