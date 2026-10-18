@@ -35,7 +35,17 @@ jobs:
         run: dotnet build SusPayi.slnx --no-restore -c Release
 
       - name: Test
-        run: dotnet test SusPayi.slnx --no-build -c Release --logger "console;verbosity=normal"
+        run: |
+          set +e
+          dotnet test SusPayi.slnx --no-build -c Release --logger "console;verbosity=normal" > test.log 2>&1
+          code=$?
+          cat test.log
+          if [ $code -ne 0 ]; then
+            # Hata özeti, kimlik doğrulama gerektirmeyen check annotation'ında da görünsün.
+            summary=$(grep -E "error|Error|Failed|failed|Assert" test.log | tail -n 40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=dotnet test::${summary}"
+          fi
+          exit $code
 
       - name: Bekleyen model değişikliği kontrolü
         # İlk migration eklendikten sonra, modelde migration'a yansımamış değişiklik varsa CI kırılır.
