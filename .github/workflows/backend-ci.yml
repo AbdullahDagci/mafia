@@ -1,0 +1,49 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main]
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - name: Restore
+        run: dotnet restore SusPayi.slnx
+
+      - name: Build
+        run: dotnet build SusPayi.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test SusPayi.slnx --no-build -c Release --logger "console;verbosity=normal"
+
+      - name: Bekleyen model değişikliği kontrolü
+        # İlk migration eklendikten sonra, modelde migration'a yansımamış değişiklik varsa CI kırılır.
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          if ls src/SusPayi.Infrastructure/Migrations/*.cs >/dev/null 2>&1; then
+            dotnet ef migrations has-pending-model-changes \
+              --project src/SusPayi.Infrastructure --startup-project src/SusPayi.Api --no-build -c Release
+          else
+            echo "::warning::Henüz migration yok. README'deki 'dotnet ef migrations add InitialCreate' adımını çalıştırın."
+          fi
