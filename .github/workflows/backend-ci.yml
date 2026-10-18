@@ -37,7 +37,7 @@ jobs:
       - name: Test
         run: |
           set +e
-          dotnet test SusPayi.slnx --no-build -c Release --logger "console;verbosity=normal" > test.log 2>&1
+          dotnet test --solution SusPayi.slnx --no-build -c Release > test.log 2>&1
           code=$?
           cat test.log
           if [ $code -ne 0 ]; then

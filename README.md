@@ -40,7 +40,7 @@ Development ortamında uygulama açılışta migration'ları uygular ve çalış
 Testler:
 
 ```bash
-cd backend && dotnet test SusPayi.slnx
+cd backend && dotnet test --solution SusPayi.slnx
 ```
 
 ## Uç noktalar (`/api/v1`)
