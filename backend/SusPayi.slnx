@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SusPayi.Api/SusPayi.Api.csproj" />
+    <Project Path="src/SusPayi.Domain/SusPayi.Domain.csproj" />
+    <Project Path="src/SusPayi.Infrastructure/SusPayi.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SusPayi.Domain.Tests/SusPayi.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

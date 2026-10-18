@@ -1,0 +1,59 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main, "feature/**"]
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: backend/global.json
+
+      - name: Restore
+        run: dotnet restore SusPayi.slnx
+
+      - name: Build
+        run: dotnet build SusPayi.slnx --no-restore -c Release
+
+      - name: Test
+        run: |
+          set +e
+          dotnet test --solution SusPayi.slnx --no-build -c Release > test.log 2>&1
+          code=$?
+          cat test.log
+          if [ $code -ne 0 ]; then
+            # Hata özeti, kimlik doğrulama gerektirmeyen check annotation'ında da görünsün.
+            summary=$(grep -E "error|Error|Failed|failed|Assert" test.log | tail -n 40 | sed ':a;N;$!ba;s/\n/%0A/g')
+            echo "::error title=dotnet test::${summary}"
+          fi
+          exit $code
+
+      - name: Bekleyen model değişikliği kontrolü
+        # İlk migration eklendikten sonra, modelde migration'a yansımamış değişiklik varsa CI kırılır.
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          if ls src/SusPayi.Infrastructure/Migrations/*.cs >/dev/null 2>&1; then
+            dotnet ef migrations has-pending-model-changes \
+              --project src/SusPayi.Infrastructure --startup-project src/SusPayi.Api --no-build -c Release
+          else
+            echo "::warning::Henüz migration yok. README'deki 'dotnet ef migrations add InitialCreate' adımını çalıştırın."
+          fi
